@@ -3,8 +3,10 @@ all: range-tracker
 CXX := g++
 
 CXX_SRCS = $(wildcard *.cc)
-CXX_OBJS := $(patsubst %.cc,%.o,$(CXX_SRCS))
-CXX_DEPS := $(patsubst %.cc,%.d,$(CXX_SRCS))
+CXX_TESTS_DIR = ./tests
+CXX_TEST_SRCS = $(wildcard $(CXX_TESTS_DIR)/*.cc)
+CXX_OBJS = $(patsubst %.cc,%.o,$(CXX_SRCS))
+CXX_DEPS = $(patsubst %.cc,%.d,$(CXX_SRCS))
 
 CXX_INCLUDE := -I.
 CXX_WARNINGS=-pedantic -Wall -Wextra -Wcast-align -Wcast-qual \
@@ -32,7 +34,16 @@ doc: Doxyfile
 	rm -rf doc
 	doxygen Doxyfile
 
-.PHONY: all doc clean
+tests/test_main.o: tests/test_main.cc
+	g++ -g3 $(CXX_INCLUDE) -c -o $@ $^
+
+rt-tests: $(filter-out ./tests/test_main.cc, $(CXX_TEST_SRCS)) tests/test_main.o
+	g++ -g3 $(CXX_INCLUDE) -o $@ $^
+
+run-tests: rt-tests
+	./rt-tests
+
+.PHONY: all run-tests doc clean
 
 -include $(CXX_DEPS)
 
