@@ -28,9 +28,13 @@ range-tracker: $(CXX_OBJS)
 
 all: range-tracker
 
-.PHONY: all clean
+doc: Doxyfile
+	rm -rf doc
+	doxygen Doxyfile
+
+.PHONY: all doc clean
 
 -include $(CXX_DEPS)
 
 clean:
-	rm range-tracker $(CXX_OBJS) $(CXX_DEPS)
+	rm -rf range-tracker doc $(CXX_OBJS) $(CXX_DEPS)
