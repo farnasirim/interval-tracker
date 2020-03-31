@@ -13,19 +13,18 @@ class Trivial : public RangeTracker<T> {
     return !(b.second <= a.first || a.second <= b.first);
   }
  public:
-  virtual void Add(const T& a, const T& b) {
+  void Add(const T& a, const T& b) final override {
     for(T i = a; i < b; i++) {
       axis_.insert(i);
     }
   }
 
-  virtual void Delete(const T& a, const T& b) {
+  void Delete(const T& a, const T& b) final override {
     for(T i = a; i < b; i++) {
       axis_.erase(i);
     }
   }
-
-  virtual std::vector<std::pair<T, T>> Get(const T& a, const T& b) {
+  std::vector<std::pair<T, T>> Get(const T& a, const T& b) final override {
     std::vector<std::pair<T, T>> candidates, ret;
 
     for(auto it: axis_) {
