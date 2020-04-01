@@ -24,6 +24,8 @@ namespace rt {
  * in the set, we can increment the set iterator to get the endpoint. Therefore
  * we can traverse the intervals, while being able to seamlessly think in terms
  * of points themselves.
+ *
+ * Space complexity is the space complexity of set (rb-tree: O(n))
  */
 template<typename T>
 class Set: public RangeTracker<T> {
@@ -96,6 +98,10 @@ class Set: public RangeTracker<T> {
     intervals_.emplace(b, close);
   }
 
+  /**
+   * Delete and add are very similar. The time complexity is exactly the same
+   * as Add
+   */
   void Delete(const T& a, const T& b) final override {
 
     // Very similar to Add. We need to handle the edge cases in the two
@@ -138,6 +144,8 @@ class Set: public RangeTracker<T> {
 
   /* If [a, b) intersects an existing interval [c, d), we will have to return
    * [c, d), not the truncated version of [c, d) which falls under [a, b).
+   *
+   * Time complexity is size of the output times O(lgn) for the traversal.
    */
   std::vector<std::pair<T, T>> Get(const T& a, const T& b) final override {
     std::vector<std::pair<T, T>> ret;
