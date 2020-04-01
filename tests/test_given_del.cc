@@ -5,9 +5,9 @@ TEST_CASE("RangeTracker objects must work correctly on the given delete tests",
 
   auto rts = ALL_IMPLEMENTATIONS(int);
   std::vector<std::pair<int, int>> empty = {};
-    for(auto& it: rts) {
-      it->Add(1, 6);
-    }
+  for(auto& it: rts) {
+    it->Add(1, 6);
+  }
   std::vector<std::pair<int, int>> existing = {{1, 6}};
   for(auto& it: rts) {
     REQUIRE(it->Get(-200, 200) == existing);
