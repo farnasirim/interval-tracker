@@ -10,9 +10,33 @@
 
 namespace rt {
 
+/**
+ * Implementation of the RangeTracker interface using a set. Each interval
+ * in the set is represented by two separate set entries. A start entry and
+ * and end entry: e.g. [a, b) has two entries in the set:
+ * pair(a, this_is_a_start_point) and pair(b, this_is_an_end_point)
+ *
+ * Invariant that is maintained by every operation: There are no two intervals
+ * that touch or intersect eachother. I.e. no two [a, b) and [c, d) such that
+ * b = c or c <= b <= d or c <= a <= b. Intervals with these conditions will
+ * immediately be simplified, merged, etc.
+ * An important property that this gives us is after finding a starting point
+ * in the set, we can increment the set iterator to get the endpoint. Therefore
+ * we can traverse the intervals, while being able to seamlessly think in terms
+ * of points themselves.
+ */
 template<typename T>
 class Set: public RangeTracker<T> {
  public:
+  /**
+   * Add works in amortized O(lgn) and worst case O(nlgn), because we may
+   * end up removing many intervals that fall under the new interval.
+   * Amortization argument is simple using e.g. the banker's method:
+   * We place a coin on an interval when it's inserted into the set, and
+   * use that coin we need to remove that interval for whatever reason.
+   * Each set operation is O(lgn) (where n is the total number of intervals,
+   * yielding the above complexities.
+   */
   void Add(const T& old_a, const T& old_b) final override {
     auto a = old_a;
     auto b = old_b;
@@ -22,6 +46,9 @@ class Set: public RangeTracker<T> {
       return;
     }
 
+    // Do the dirty work of handling intersections at the two endpoints of the
+    // interval. There might be inserts/deletes here but there's only a constant
+    // number of them: not a problem.
     auto before_start = intervals_.upper_bound(std::make_pair(a, any_high));
     if(before_start != intervals_.begin()) {
       before_start --;
@@ -45,6 +72,11 @@ class Set: public RangeTracker<T> {
       }
     }
 
+    // The above process has taken care of the clashes at the start of the
+    // interval. Now we can loop over all the intervals that fall under this
+    // new interval and delete them, "making room" for the new interval to be
+    // inserted. We still have to be careful about the intersection with the
+    // final endpoint.
     std::vector<std::pair<T, int>> to_dels;
     auto it = intervals_.lower_bound(std::make_pair(a, any_low));
     while(it != intervals_.end() && it->first <= b) {
@@ -65,6 +97,9 @@ class Set: public RangeTracker<T> {
   }
 
   void Delete(const T& a, const T& b) final override {
+
+    // Very similar to Add. We need to handle the edge cases in the two
+    // endpoints.
     auto after_start = intervals_.upper_bound(std::make_pair(a, any_high));
     if(after_start != intervals_.end() && after_start->second == close) {
       auto maybe_del = *after_start;
@@ -81,7 +116,7 @@ class Set: public RangeTracker<T> {
       }
     }
 
-
+    // Similar to Add.
     auto it = intervals_.upper_bound(std::make_pair(a, any_high));
     std::vector<std::pair<T, int>> to_dels;
     while(it != intervals_.end() && it->first < b) {
@@ -101,6 +136,9 @@ class Set: public RangeTracker<T> {
     }
   }
 
+  /* If [a, b) intersects an existing interval [c, d), we will have to return
+   * [c, d), not the truncated version of [c, d) which falls under [a, b).
+   */
   std::vector<std::pair<T, T>> Get(const T& a, const T& b) final override {
     std::vector<std::pair<T, T>> ret;
 
@@ -124,6 +162,9 @@ class Set: public RangeTracker<T> {
   }
 
  private:
+
+  // any_low and any_high are used for binary search purposes to show
+  // what we're interested in when we're using lower_bound, upper_bound.
   static constexpr int any_low = -1;
   static constexpr int open = 0;
   static constexpr int close = 1;
