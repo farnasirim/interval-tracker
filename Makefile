@@ -35,10 +35,10 @@ doc: Doxyfile
 	doxygen Doxyfile
 
 tests/test_main.o: tests/test_main.cc
-	g++ -g3 $(CXX_INCLUDE) -c -o $@ $^
+	g++ $(CXX_FLAGS) -g3 $(CXX_INCLUDE) -c -o $@ $^
 
-rt-tests: $(filter-out ./tests/test_main.cc, $(CXX_TEST_SRCS)) tests/test_main.o
-	g++ -g3 $(CXX_INCLUDE) -o $@ $^
+rt-tests: $(filter-out ./tests/test_main.cc, $(CXX_TEST_SRCS)) $(filter-out main.o, $(CXX_OBJS)) tests/test_main.o
+	g++ $(CXX_FLAGS) -g3 $(CXX_INCLUDE) -o $@ $^
 
 run-tests: rt-tests
 	./rt-tests
@@ -48,4 +48,4 @@ run-tests: rt-tests
 -include $(CXX_DEPS)
 
 clean:
-	rm -rf range-tracker doc $(CXX_OBJS) $(CXX_DEPS)
+	rm -rf rt-tests range-tracker doc $(CXX_OBJS) $(CXX_DEPS)

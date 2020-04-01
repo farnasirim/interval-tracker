@@ -12,12 +12,12 @@
 #define test_deb(x) std::cout << #x << " : " << x << std::endl
 
 
-      // std::make_shared<rt::SegTree<data_type>>(), \
 
 #define ALL_IMPLEMENTATIONS(data_type) \
   std::vector<std::shared_ptr<rt::RangeTracker<data_type>>>({ \
       std::make_shared<rt::Trivial<data_type>>(), \
       std::make_shared<rt::Set<data_type>>(), \
+      std::make_shared<rt::SegTree<data_type>>(), \
     })
 
 #define subvec(vec, from, to) \
