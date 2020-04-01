@@ -1,9 +1,12 @@
 #include <cassert>
 #include <cctype>
-#include <iostream>
 
 #include <string>
+#include <functional>
 #include <memory>
+#include <iostream>
+#include <iomanip>
+#include <chrono>
 
 #include "range_tracker.h"
 #include "trivial.h"
@@ -54,6 +57,77 @@ int main(int argc, char **argv) {
         std::cout << "]";
         std::cout << std::endl;
       }
+    }
+  } else if(mode.find("perf") != std::string::npos) {
+
+    std::vector<std::string> impl_names = {"set based", "seg tree"};
+
+    srand(1231231231);
+
+    std::vector<int> ranges = {1000, 100000, 1000000000};
+    std::vector<std::string> type_name = {"1/3 uniform", "    90% get", "90% add/del"};
+    std::vector<std::function<int()>> op = {
+      []{ return rand() % 3 ; },
+      []{ return std::min(rand() % 20, 2); },
+      []{ auto val = rand(); if(val <= 1) return 2 ; else return val % 2 ; },
+    };
+    auto generator = [](int rng) { return static_cast<int>(rand() % (rng * 2) - rng) ; };
+    auto interval_generator = [&generator] (int rng) {
+      auto x = std::make_pair(generator(rng), generator(rng));
+      if(x.first == x.second) {
+        x.second += 1;
+      }
+      if(x.first > x.second) {
+        std::swap(x.first, x.second);
+      }
+      return x;
+    };
+
+    int num_queries = 1e6;
+
+    std::size_t ig = 0;
+
+    std::cout << "number of queries: " << num_queries << std::endl;
+    for(std::size_t i = 0; i < ranges.size(); i++) {
+      for(std::size_t j = 0; j < op.size(); j++) {
+        std::vector<std::tuple<int, int, int>> queries;
+        for(int k = 0; k < num_queries; k++) {
+          auto interval = interval_generator(ranges[i]);
+          queries.emplace_back(op[j](), interval.first, interval.second);
+        }
+        std::cout << "|a|,|b| <= "
+          << std::setw(10) << std::fixed << ranges[i]
+          << ",    workload type:   " << type_name[j] << ":     ";
+
+        std::vector<std::shared_ptr<rt::RangeTracker<int>>> impl = {
+          std::make_shared<rt::Set<int>>(),
+          std::make_shared<rt::SegTree<int>>()
+        };
+        for(std::size_t l = 0; l < impl.size(); l++) {
+          auto& im = impl[l];
+          auto start_time = std::chrono::high_resolution_clock::now();
+          for(auto& q: queries) {
+            if(std::get<0>(q) == 0) {
+              im->Add(std::get<1>(q), std::get<2>(q));
+            } else if(std::get<0>(q) == 1) {
+              im->Delete(std::get<1>(q), std::get<2>(q));
+            } else {
+              ig ^= im->Get(std::get<1>(q), std::get<2>(q)).size();
+            }
+          }
+          auto end_time = std::chrono::high_resolution_clock::now();
+          std::cout << impl_names[l] << " : "
+            << std::setprecision(5) << std::fixed
+            << std::setw(3) << std::fixed
+            << std::chrono::duration<double>(end_time - start_time).count()
+            << "s" << "     ";
+        }
+        std::cout << std::endl;
+      }
+    }
+
+    if(ig&1) {
+      std::cout << std::endl;
     }
   } else {
     std::cout << "usage: " << std::endl;
