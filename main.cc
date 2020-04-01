@@ -132,6 +132,7 @@ int main(int argc, char **argv) {
   } else {
     std::cout << "usage: " << std::endl;
     std::cout << argv[0] << " cmdline (segtree|set|trivial)" << std::endl;
+    std::cout << argv[0] << " perf" << std::endl;
   }
   return 0;
 }
