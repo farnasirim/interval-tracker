@@ -7,6 +7,10 @@
 
 namespace rt {
 
+/**
+ * Segment tree node. Implementes set and get and expand operations which
+ * allows us to find where an interval in the margin of the get query ends.
+ */
 template<typename T>
 class STNode {
  public:
@@ -116,6 +120,12 @@ class STNode {
   bool is_all_set_;
 };
 
+/**
+ * Implementation of the range tracker interface using a segment tree.
+ *
+ * Space complexity at the worst case is number of intervals times O(lgm),
+ * where m is the possible range of the interval endpoints.
+ */
 template<typename T>
 class SegTree: public RangeTracker<T> {
   static constexpr T mn = std::numeric_limits<T>::min()/2 + 1;
@@ -125,14 +135,31 @@ class SegTree: public RangeTracker<T> {
 
   }
 
+  /**
+   * Add is constant w.r.t. the number of intervals and takes O(lg(m)) in the
+   * worst case, where m is the range of the numbers that the interval
+   * endpoints can come from. (e.g. range of int)
+   */
   void Add(const T& a, const T& b) final override {
     root_->set(mn, mx, a, b, true);
   }
-
+  /**
+   * Delete works exactly similar to add.
+   */
   void Delete(const T& a, const T& b) final override {
     root_->set(mn, mx, a, b, false);
   }
 
+  /**
+   * Time complexity of Get at the worst case is size of the output times
+   * O(lgm) for finding the endpoints of the intervals, copying each interval
+   * up the tree through the parent nodes to take care of merges, etc.
+   *
+   * We have to be careful with the semantics of Get in the problem statement.
+   * The exapand_right/left subroutines make sure we satisfy that requirement.
+   * I.e. Add 0 10, Get 2 5 must result in [(0, 10)], not [(2, 5)]. So we
+   * "expand" the 2 and the 5 to the left and right.
+   */
   std::vector<std::pair<T, T>> Get(const T& a, const T& b) final override {
     auto ret = root_->get(mn, mx, a, b);
     if(!ret.empty()) {
