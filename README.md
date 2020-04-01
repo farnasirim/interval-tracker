@@ -44,6 +44,11 @@ number of queries: 1000000
 |a|,|b| <= 1000000000,    workload type:   90% add/del:     set based : 0.28421s     seg tree : 5.19850s
 ```
 
+(On a side note, I expected the seg tree approach to work faster in smaller
+ranges, which is why I implemented it in the first place. Unfortunately this
+didn't turn out to be correct. I played around with the perf tool a little
+bit to see what's causing the problem, but haven't found much.)
+
 To build and run the tests:
 ```bash
 make run-tests
