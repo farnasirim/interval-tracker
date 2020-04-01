@@ -11,6 +11,7 @@
 #include "segtree_rt.h"
 
 int main(int argc, char **argv) {
+  using int_type = long long;
   assert(argc > 1);
   std::string mode(argv[1]);
   std::transform(mode.begin(), mode.end(), mode.begin(), tolower);
@@ -18,21 +19,21 @@ int main(int argc, char **argv) {
     assert(argc == 3);
     std::string requested_impl_name = argv[2];
 
-    std::unique_ptr<rt::RangeTracker<long long>> rt;
+    std::unique_ptr<rt::RangeTracker<int_type>> rt;
 
     std::transform(requested_impl_name.begin(), requested_impl_name.end(),
         requested_impl_name.begin(), tolower);
 
     if(requested_impl_name.find("seg") != std::string::npos) {
-      rt = std::make_unique<rt::SegTree<long long>>();
+      rt = std::make_unique<rt::SegTree<int_type>>();
     } else if(requested_impl_name.find("set") != std::string::npos) {
-      rt = std::make_unique<rt::Set<long long>>();
+      rt = std::make_unique<rt::Set<int_type>>();
     } else {
-      rt = std::make_unique<rt::Trivial<long long>>();
+      rt = std::make_unique<rt::Trivial<int_type>>();
     }
 
     std::string cmd;
-    long long st, en;
+    int_type st, en;
     while(std::cin >> cmd >> st >> en) {
       std::transform(cmd.begin(), cmd.end(), cmd.begin(), tolower);
       if(cmd.find("a") != std::string::npos) { // add
